@@ -1,91 +1,196 @@
-@extends('layouts.clinic')
+<x-layout.app-layout title="ផ្ទាំងគ្រប់គ្រង" :navigation="$navigation" :doctor="$doctor">
+    <x-layout.breadcrumb :items="$breadcrumbs" />
 
-@section('title', 'ផ្ទាំងគ្រប់គ្រង | PRUM SANTEPHEAP CLINIC')
-@section('page-title', 'ផ្ទាំងគ្រប់គ្រង')
+    <x-layout.page-header
+        title="ផ្ទាំងគ្រប់គ្រងមន្ទីរពេទ្យ"
+        subtitle="មើលស្ថានភាពប្រតិបត្តិការ អ្នកជំងឺ ការណាត់ជួប ចំណូល និងការវិភាគសុខភាពក្នុងមួយកន្លែង។"
+    >
+        <a href="{{ route('modules.create', ['module' => 'appointments']) }}" class="inline-flex items-center gap-2 rounded-2xl bg-[#2F6F3E] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#285f35]">
+            <i data-lucide="calendar-plus" class="h-4 w-4"></i>
+            ការណាត់ជួបថ្មី
+        </a>
+        <a href="{{ route('profile') }}" class="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+            <i data-lucide="user-round" class="h-4 w-4"></i>
+            ប្រវត្តិរូប
+        </a>
+    </x-layout.page-header>
 
-@section('content')
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        @foreach ($stats as $stat)
-            <article class="rounded-lg border border-emerald-100 bg-white p-5 shadow-sm">
-                <p class="text-sm font-medium text-emerald-700">{{ $stat['label'] }}</p>
-                <p class="mt-3 text-3xl font-bold text-emerald-950">{{ $stat['value'] }}</p>
-                <p class="mt-2 text-sm text-gray-500">{{ $stat['caption'] }}</p>
-            </article>
+    <section class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        @foreach ($statistics as $stat)
+            <x-dashboard.stat-card
+                :title="$stat['title']"
+                :value="$stat['value']"
+                :change="$stat['change']"
+                :badge="$stat['badge']"
+                :icon="$stat['icon']"
+                :tone="$stat['tone']"
+            />
         @endforeach
     </section>
 
-    <section class="mt-6 grid gap-4 lg:grid-cols-3">
-        <div class="rounded-lg border border-emerald-100 bg-white p-5 shadow-sm lg:col-span-2">
-            <div class="flex items-center justify-between gap-3">
-                <div>
-                    <h2 class="text-lg font-bold text-emerald-950">ការណាត់ជួបថ្មីៗ</h2>
-                    <p class="text-sm text-gray-500">បង្ហាញកំណត់ត្រាចុងក្រោយពីតារាងណាត់ជួប</p>
-                </div>
-                <a href="#" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">បង្កើតថ្មី</a>
-            </div>
+    <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <x-dashboard.chart-card title="ចំណូល និងចំណាយ" subtitle="តារាងបន្ទាត់ប្រចាំខែ ឆ្នាំ {{ $revenueChart['year'] }}">
+            <x-slot:actions>
+                <select class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none focus:border-[#2F6F3E] focus:ring-4 focus:ring-[#2F6F3E]/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                    <option>{{ $revenueChart['year'] }}</option>
+                    <option>{{ $revenueChart['year'] - 1 }}</option>
+                </select>
+                <select class="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none focus:border-[#2F6F3E] focus:ring-4 focus:ring-[#2F6F3E]/10 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                    <option>ប្រចាំខែ</option>
+                    <option>ប្រចាំត្រីមាស</option>
+                </select>
+            </x-slot:actions>
+            <x-dashboard.revenue-chart :chart="$revenueChart" />
+        </x-dashboard.chart-card>
 
-            <div class="mt-5 overflow-hidden rounded-lg border border-emerald-100">
-                <table class="min-w-full divide-y divide-emerald-100 text-left text-sm">
-                    <thead class="bg-emerald-50 text-emerald-900">
-                        <tr>
-                            <th class="px-4 py-3 font-semibold">អ្នកជំងឺ</th>
-                            <th class="px-4 py-3 font-semibold">វេជ្ជបណ្ឌិត</th>
-                            <th class="px-4 py-3 font-semibold">ថ្ងៃម៉ោង</th>
-                            <th class="px-4 py-3 font-semibold">ស្ថានភាព</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-emerald-50 bg-white">
-                        @forelse ($appointments as $appointment)
-                            @php
-                                $status = [
-                                    'pending' => 'រង់ចាំ',
-                                    'approved' => 'បានអនុម័ត',
-                                    'cancelled' => 'បានបោះបង់',
-                                ][$appointment->status] ?? $appointment->status;
-                            @endphp
-                            <tr>
-                                <td class="px-4 py-3 text-gray-800">{{ $appointment->patient?->name ?? 'មិនមានទិន្នន័យ' }}</td>
-                                <td class="px-4 py-3 text-gray-800">{{ $appointment->doctor?->name ?? 'មិនមានទិន្នន័យ' }}</td>
-                                <td class="px-4 py-3 text-gray-600">{{ $appointment->appointment_date?->format('d/m/Y H:i') }}</td>
-                                <td class="px-4 py-3">
-                                    <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">{{ $status }}</span>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td class="px-4 py-6 text-center text-gray-500" colspan="4">មិនទាន់មានការណាត់ជួប</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+        <div class="space-y-6">
+            <x-dashboard.appointment-summary :summary="$appointmentSummary" />
+            <x-dashboard.circular-progress
+                :percentage="$performance['percentage']"
+                :caption="$performance['caption']"
+                :stats="$performance['stats']"
+            />
+        </div>
+    </section>
+
+    <section class="mt-6 grid gap-6 xl:grid-cols-3">
+        <div class="xl:col-span-2">
+            <x-dashboard.chart-card title="អ្នកជំងឺប្រចាំសប្តាហ៍" subtitle="តារាងផ្ទៃបង្ហាញចំនួនអ្នកជំងឺតាមថ្ងៃ">
+                <x-dashboard.patient-chart :chart="$patientChart" />
+            </x-dashboard.chart-card>
         </div>
 
-        <div class="rounded-lg border border-emerald-100 bg-white p-5 shadow-sm">
-            <h2 class="text-lg font-bold text-emerald-950">ស្ថានភាពប្រតិបត្តិការ</h2>
-            <div class="mt-5 space-y-4">
-                @foreach ($inventory as $item)
-                    <div class="flex items-center justify-between rounded-lg bg-emerald-50 px-4 py-3">
-                        <span class="text-sm font-medium text-emerald-900">{{ $item['label'] }}</span>
-                        <span class="text-lg font-bold text-emerald-950">{{ $item['value'] }}</span>
-                    </div>
+        <x-dashboard.department-progress :departments="$departments" />
+    </section>
+
+    <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div>
+            <h2 class="mb-4 text-lg font-extrabold text-slate-950 dark:text-white">សកម្មភាពរហ័ស</h2>
+            <div class="grid gap-4 md:grid-cols-3">
+                @foreach ($quickActions as $action)
+                    <x-dashboard.quick-action-card
+                        :title="$action['title']"
+                        :description="$action['description']"
+                        :href="$action['href']"
+                        :icon="$action['icon']"
+                    />
                 @endforeach
             </div>
         </div>
+
+        <x-dashboard.activity-card :activities="$activities" />
     </section>
 
-    <section class="mt-6 grid gap-4 md:grid-cols-3">
-        <article class="rounded-lg border border-emerald-100 bg-white p-5 shadow-sm">
-            <h2 class="text-lg font-bold text-emerald-950">ការគ្រប់គ្រងអ្នកជំងឺ</h2>
-            <p class="mt-2 text-sm text-gray-500">រក្សាទុកប្រវត្តិ ស្ថានភាពសុខភាព និងទំនាក់ទំនងអ្នកជំងឺ។</p>
-        </article>
-        <article class="rounded-lg border border-emerald-100 bg-white p-5 shadow-sm">
-            <h2 class="text-lg font-bold text-emerald-950">ឱសថ និងស្តុក</h2>
-            <p class="mt-2 text-sm text-gray-500">តាមដានប្រភេទឱសថ តម្លៃ ចំនួន និងថ្ងៃផុតកំណត់។</p>
-        </article>
-        <article class="rounded-lg border border-emerald-100 bg-white p-5 shadow-sm">
-            <h2 class="text-lg font-bold text-emerald-950">វិក្កយបត្រ និងទូទាត់</h2>
-            <p class="mt-2 text-sm text-gray-500">គាំទ្រការទូទាត់សាច់ប្រាក់ និងការសាកល្បងបាគង។</p>
-        </article>
-    </section>
-@endsection
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const primary = '#2F6F3E';
+                const success = '#16A34A';
+                const warning = '#F59E0B';
+
+                const revenueCanvas = document.getElementById('revenueChart');
+                if (revenueCanvas && window.Chart) {
+                    const data = JSON.parse(revenueCanvas.dataset.chart);
+                    const context = revenueCanvas.getContext('2d');
+                    const gradient = context.createLinearGradient(0, 0, 0, 280);
+                    gradient.addColorStop(0, 'rgba(47, 111, 62, 0.20)');
+                    gradient.addColorStop(1, 'rgba(47, 111, 62, 0.00)');
+
+                    new Chart(revenueCanvas, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [
+                                {
+                                    label: 'ចំណូល',
+                                    data: data.revenue,
+                                    borderColor: primary,
+                                    backgroundColor: gradient,
+                                    fill: true,
+                                    tension: 0.42,
+                                    borderWidth: 3,
+                                    pointRadius: 0,
+                                    pointHoverRadius: 5,
+                                },
+                                {
+                                    label: 'ចំណាយ',
+                                    data: data.expenses,
+                                    borderColor: warning,
+                                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                                    fill: true,
+                                    tension: 0.42,
+                                    borderWidth: 3,
+                                    pointRadius: 0,
+                                    pointHoverRadius: 5,
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: { duration: 900, easing: 'easeOutQuart' },
+                            interaction: { mode: 'index', intersect: false },
+                            plugins: {
+                                legend: { labels: { usePointStyle: true, boxWidth: 8 } },
+                                tooltip: {
+                                    callbacks: {
+                                        label: (item) => `${item.dataset.label}: ${item.formattedValue} លាន ៛`,
+                                    },
+                                },
+                            },
+                            scales: {
+                                x: { grid: { display: false } },
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: { callback: (value) => `${value}លាន` },
+                                    grid: { color: 'rgba(148, 163, 184, 0.18)' },
+                                },
+                            },
+                        },
+                    });
+                }
+
+                const patientCanvas = document.getElementById('patientChart');
+                if (patientCanvas && window.Chart) {
+                    const data = JSON.parse(patientCanvas.dataset.chart);
+                    const context = patientCanvas.getContext('2d');
+                    const gradient = context.createLinearGradient(0, 0, 0, 240);
+                    gradient.addColorStop(0, 'rgba(22, 163, 74, 0.22)');
+                    gradient.addColorStop(1, 'rgba(22, 163, 74, 0.00)');
+
+                    new Chart(patientCanvas, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'អ្នកជំងឺ',
+                                data: data.values,
+                                borderColor: success,
+                                backgroundColor: gradient,
+                                fill: true,
+                                tension: 0.45,
+                                borderWidth: 3,
+                                pointRadius: 0,
+                                pointHoverRadius: 5,
+                            }],
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: { duration: 850, easing: 'easeOutQuart' },
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                x: { grid: { display: false } },
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: 'rgba(148, 163, 184, 0.18)' },
+                                },
+                            },
+                        },
+                    });
+                }
+            });
+        </script>
+    @endpush
+</x-layout.app-layout>
